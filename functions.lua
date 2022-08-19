@@ -2,7 +2,7 @@ onion.radius = function (pxp) -- Pass in player XP
     --return the radius of the player
     for index, xp in ipairs(onion.ranks) do
         if pxp < xp then
-            return (onion.ranks[index]/10)
+            return ((onion.ranks[index]/10) -200)
         end
     end
 end
@@ -39,7 +39,7 @@ onion.scan = function()
 
         --Determine if we need to move the player back
         local d = vector.distance(pos, onion.oragin)
-        minetest.chat_send_all(d)
+        --minetest.chat_send_all(d)
 
         -- Get player Meta Data
         local pmeta = player:get_meta() -- player Meta
@@ -54,17 +54,34 @@ onion.scan = function()
         --Determine permitted radius
         radius = onion.radius(currentXp)
 
-
+        --[[
+        minetest.chat_send_all("x: ".. math.abs(onion.oragin.x - pos.x))
+        minetest.chat_send_all("z: ".. math.abs(onion.oragin.z - pos.z))
+        minetest.chat_send_all("y: ".. math.abs(onion.oragin.y - pos.y))
+        ]]--
+        if radius < math.abs(onion.oragin.x - pos.x) or radius < math.abs(onion.oragin.z - pos.z) or radius/2 < math.abs(onion.oragin.y - pos.y) then
+            minetest.chat_send_all("you are outside")
+            --Teleport player to last known valid location
+            --minetest.chat_send_all("teleport")
+            minetest.chat_send_player(player:get_player_name(), "You are outside your XP radius, returning you to previous valid location")
+            ppos = minetest.deserialize(pmeta:get_string("onion")) -- Previous valid location
+            player:move_to(ppos, true)
+        else
+            --Record Valid Location
+            pmeta:set_string("onion",minetest.serialize(pos))
+        end
+        --[[
         if d > radius then
             --Teleport player to last known valid location
-            minetest.chat_send_all("teleport")
+            --minetest.chat_send_all("teleport")
             minetest.chat_send_player(player:get_player_name(), "You are outside your XP radius, returning you to previous valid location")
-            ppos = minetest.deserialize(pmeta:get_string("onion")) -- Previous good location
+            ppos = minetest.deserialize(pmeta:get_string("onion")) -- Previous valid location
             player:move_to(ppos, true)
         else
             --Record Valid Location
             pmeta:set_string("onion",minetest.serialize(pos))    
         end
+        ]]--
     end
     
     --For testing purposes
