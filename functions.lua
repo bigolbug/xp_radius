@@ -46,7 +46,7 @@ onion.scan = function()
         
 
         --Check to see if onion exists in meta
-        --If it does not then create onion in meta with cordinates at the onion oragin
+        --If it does not then create onion in meta with coordinates at the onion oragin
         if pmeta:get_string("onion") == "" then
             pmeta:set_string("onion",minetest.serialize(onion.oragin))    
         end
@@ -60,7 +60,7 @@ onion.scan = function()
         minetest.chat_send_all("y: ".. math.abs(onion.oragin.y - pos.y))
         ]]--
         if radius < math.abs(onion.oragin.x - pos.x) or radius < math.abs(onion.oragin.z - pos.z) or radius/2 < math.abs(onion.oragin.y - pos.y) then
-            minetest.chat_send_all("you are outside")
+            --minetest.chat_send_all("you are outside")
             --Teleport player to last known valid location
             --minetest.chat_send_all("teleport")
             minetest.chat_send_player(player:get_player_name(), "You are outside your XP radius, returning you to previous valid location")
