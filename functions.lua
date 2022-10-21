@@ -1,8 +1,28 @@
-onion.radius = function (pxp) -- Pass in player XP
-    --return the radius of the player
-    for index, xp in ipairs(onion.ranks) do
-        if pxp < xp then
-            return ((onion.ranks[index]/10) -200)
+onion.radius = function (pxp,player) -- Pass in player XP and objectref
+    --Bypass if player is Onion Admin
+    if minetest.check_player_privs(player,"onion:admin") then
+        return 40000
+    end
+
+    local radius = 100
+    --Return the radius of the player
+    local privs = minetest.check_player_privs(player)
+    for index, priv in ipairs(onion.cprivs) do
+        if not minetest.check_player_privs(player,priv) then
+            local pRad = index*400
+            --Determine Radius based on XP
+            for index, xp in ipairs(onion.ranks) do
+                if pxp < xp then
+                    local xRad = ((onion.ranks[index]/10) -200)
+                    if xRad < pRad then
+                        return xRad
+                    else
+                        return pRad
+                    end
+                end
+            end
+        else
+
         end
     end
 end
@@ -29,21 +49,20 @@ onion.scan = function()
     local activePlayers = minetest.get_connected_players()
     for index, player in ipairs(activePlayers) do
         --initialize variables
-        local radius = 100
+        local radius = nil
 
         --Get the player position 
         local pos = player:get_pos()
+        local name = player:get_player_name()
         
         --Get the player XP
-        local currentXp = xp_redo.get_xp(player:get_player_name())
+        local currentXp = xp_redo.get_xp(name)
 
-        --Determine if we need to move the player back
+        --Determine players distance from oragin. 
         local d = vector.distance(pos, onion.oragin)
-        --minetest.chat_send_all(d)
 
         -- Get player Meta Data
         local pmeta = player:get_meta() -- player Meta
-        
 
         --Check to see if onion exists in meta
         --If it does not then create onion in meta with coordinates at the onion oragin
@@ -52,13 +71,20 @@ onion.scan = function()
         end
 
         --Determine permitted radius
-        radius = onion.radius(currentXp)
+        radius = onion.radius(currentXp,player)
 
         --[[
         minetest.chat_send_all("x: ".. math.abs(onion.oragin.x - pos.x))
         minetest.chat_send_all("z: ".. math.abs(onion.oragin.z - pos.z))
         minetest.chat_send_all("y: ".. math.abs(onion.oragin.y - pos.y))
         ]]--
+
+        if radius == nil then
+            minetest.chat_send_all("Onion Radius Problem: ".. os.clock())
+            print("Onion Player Error: "..name.." radius not defined. Defaulting to 100 nodes.")
+            radius = 100
+        end
+
         if radius < math.abs(onion.oragin.x - pos.x) or radius < math.abs(onion.oragin.z - pos.z) or radius/2 < math.abs(onion.oragin.y - pos.y) then
             --minetest.chat_send_all("you are outside")
             --Teleport player to last known valid location

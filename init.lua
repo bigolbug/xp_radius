@@ -3,8 +3,11 @@ onion = {}
 local modpath = minetest.get_modpath(minetest.get_current_modname())
 dofile(modpath.."/config.lua")
 dofile(modpath.."/functions.lua")
---Initialize the oragin as null
 
+--Create Admin Privs
+minetest.register_privilege("onion:admin",{description = "You are not resticted by the onion"})
+
+--Initialize the oragin as null
 local write_file = function()
     local f = io.open(onion.FN, "w")
     local data_string = minetest.serialize(onion.oragin)
@@ -15,6 +18,7 @@ end
 minetest.register_craftitem("onion:wand",{
     description = "Sets the center of the xp onion",
     inventory_image = "onion_Wand.png",
+    groups = {not_in_creative_inventory = 1},
     -- on right click create a global variable that specifies the oragin of the onion. 
     on_use = function(itemstack, user, pointed_thing)
         onion.oragin = user:get_pos()
