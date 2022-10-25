@@ -40,6 +40,19 @@ onion.init = function ()
     --do nothing
 end
 
+function onion.permit(rad, pos)
+    local ceiling = 32000
+    local floor = rad/2
+    local prad = {x = math.abs(onion.oragin.x - pos.x), z = math.abs(onion.oragin.z - pos.z), y = onion.oragin.y - pos.y}
+    if prad.x > rad or prad.z > rad or prad.y > floor then
+        --player outside of radius
+        return true 
+    end
+
+    --player is within radius
+    return false
+end
+
 onion.scan = function()
     if onion.oragin == nil then
         minetest.after(onion.interval*5,onion.scan)
@@ -73,41 +86,20 @@ onion.scan = function()
         --Determine permitted radius
         radius = onion.radius(currentXp,player)
 
-        --[[
-        minetest.chat_send_all("x: ".. math.abs(onion.oragin.x - pos.x))
-        minetest.chat_send_all("z: ".. math.abs(onion.oragin.z - pos.z))
-        minetest.chat_send_all("y: ".. math.abs(onion.oragin.y - pos.y))
-        ]]--
-
         if radius == nil then
-            minetest.chat_send_all("Onion Radius Problem: ".. os.clock())
-            print("Onion Player Error: "..name.." radius not defined. Defaulting to 100 nodes.")
+            minetest.debug("Onion Player Error: "..name.." radius not defined. Defaulting to 100 nodes.")
             radius = 100
         end
 
-        if radius < math.abs(onion.oragin.x - pos.x) or radius < math.abs(onion.oragin.z - pos.z) or radius/2 < math.abs(onion.oragin.y - pos.y) then
-            --minetest.chat_send_all("you are outside")
-            --Teleport player to last known valid location
-            --minetest.chat_send_all("teleport")
-            minetest.chat_send_player(player:get_player_name(), "You are outside your XP radius, returning you to previous valid location")
+        if onion.permit(radius,pos) then
+            minetest.chat_send_player(player:get_player_name(), "You are outside your XP radius, returning you to a previous valid location")
             ppos = minetest.deserialize(pmeta:get_string("onion")) -- Previous valid location
             player:move_to(ppos, true)
         else
             --Record Valid Location
             pmeta:set_string("onion",minetest.serialize(pos))
         end
-        --[[
-        if d > radius then
-            --Teleport player to last known valid location
-            --minetest.chat_send_all("teleport")
-            minetest.chat_send_player(player:get_player_name(), "You are outside your XP radius, returning you to previous valid location")
-            ppos = minetest.deserialize(pmeta:get_string("onion")) -- Previous valid location
-            player:move_to(ppos, true)
-        else
-            --Record Valid Location
-            pmeta:set_string("onion",minetest.serialize(pos))    
-        end
-        ]]--
+
     end
     
     --For testing purposes
