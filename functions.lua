@@ -1,23 +1,61 @@
+--Function to initialize the oragin as null
+onion.write_file = function()
+    local f = io.open(onion.FN, "w")
+    local data_string = minetest.serialize(onion.oragin)
+    f:write(data_string)
+    io.close(f)
+end
+
+onion.bonus = function (player)
+    --initialize Variables
+    local bonus = 0
+    
+    -- Get player Meta Data
+    local pmeta = player:get_meta() -- player Meta
+
+    --Test to see if the player has the priv
+    if minetest.check_player_privs(player,"onion:CB") then
+        --If the Meta Setting is off turn on. 
+        if pmeta:get_string("onion-CB") == "off" then
+            pmeta:set_string("onion-CB","on")
+        end
+        bonus = bonus + onion.CB
+    else
+        --If the player does not have the priv, check for recent deactivation
+        if pmeta:get_string("onion-CB") == "on" then
+            pmeta:set_string("onion-CB","off")
+            return "reset"
+        end
+        -- Do not contribute anything to bonus
+    end
+
+    return bonus
+end
+
 onion.radius = function (pxp,player) -- Pass in player XP and objectref
     --Bypass if player is Onion Admin
     if minetest.check_player_privs(player,"onion:admin") then
         return 40000
     end
 
-    local radius = 100
-    --Return the radius of the player
-    local privs = minetest.check_player_privs(player)
+    local bonus = onion.bonus(player)
+    if bonus == "reset" then
+        return "reset"
+    end
+
     for index, priv in ipairs(onion.cprivs) do
+        -- Check to see if the player had current priv
         if not minetest.check_player_privs(player,priv) then
+            --Player had current priv now check XP
             local pRad = index*400
             --Determine Radius based on XP
             for index, xp in ipairs(onion.ranks) do
                 if pxp < xp then
                     local xRad = ((onion.ranks[index]/10) -200)
                     if xRad < pRad then
-                        return xRad
+                        return xRad + bonus
                     else
-                        return pRad
+                        return pRad + bonus
                     end
                 end
             end
@@ -54,6 +92,7 @@ function onion.permit(rad, pos)
 end
 
 onion.scan = function()
+    -- If oragin has not been set skip everything
     if onion.oragin == nil then
         minetest.after(onion.interval*5,onion.scan)
         return false 
@@ -82,16 +121,24 @@ onion.scan = function()
         if pmeta:get_string("onion") == "" then
             pmeta:set_string("onion",minetest.serialize(onion.oragin))    
         end
+        --initialize the christmas bonus Meta settings. Set init Value to off
+        if pmeta:get_string("onion-CB") == "" then
+            pmeta:set_string("onion-CB","off")
+        end
 
         --Determine permitted radius
         radius = onion.radius(currentXp,player)
+        --minetest.chat_send_all("DEBUG: Radius - "..radius)
 
         if radius == nil then
             minetest.debug("Onion Player Error: "..name.." radius not defined. Defaulting to 100 nodes.")
             radius = 100
         end
 
-        if onion.permit(radius,pos) then
+        if radius == "reset" then
+            minetest.chat_send_player(player:get_player_name(), "XP radius reset activated, returning you to XP oragin")
+            player:move_to(onion.oragin, true)
+        elseif onion.permit(radius,pos) then
             minetest.chat_send_player(player:get_player_name(), "You are outside your XP radius, returning you to a previous valid location")
             ppos = minetest.deserialize(pmeta:get_string("onion")) -- Previous valid location
             player:move_to(ppos, true)

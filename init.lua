@@ -1,20 +1,8 @@
-onion = {}
-
 local modpath = minetest.get_modpath(minetest.get_current_modname())
 dofile(modpath.."/config.lua")
 dofile(modpath.."/functions.lua")
 
---Create Admin Privs
-minetest.register_privilege("onion:admin",{description = "You are not resticted by the onion"})
-
---Initialize the oragin as null
-local write_file = function()
-    local f = io.open(onion.FN, "w")
-    local data_string = minetest.serialize(onion.oragin)
-    f:write(data_string)
-    io.close(f)
-end
-
+-- Register Wand
 minetest.register_craftitem("onion:wand",{
     description = "Sets the center of the xp onion",
     inventory_image = "onion_Wand.png",
@@ -23,9 +11,16 @@ minetest.register_craftitem("onion:wand",{
     on_use = function(itemstack, user, pointed_thing)
         onion.oragin = user:get_pos()
         minetest.chat_send_all("Onion Activated")
-        write_file()
+        onion.write_file()
     end
 })
 
+--Register any privs
+minetest.register_privilege("onion:admin",{description = "You are not resticted by the onion"})
+minetest.register_privilege("onion:CB",{description = "Priv used for temp privs during the christmas season"})
+
+--Initialize critical variables. 
 onion.init()
+
+--Wait 5 seconds after loading game to begin. 
 minetest.after(5,onion.scan)
