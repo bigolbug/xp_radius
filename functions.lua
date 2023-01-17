@@ -43,6 +43,22 @@ onion.radius = function (pxp,player) -- Pass in player XP and objectref
         return "reset"
     end
 
+    -- XP Radius bonus
+    local xRad = math.floor(pxp/2000)
+
+    -- Radius is primarily determined based chapter progression. 
+    for index, priv in ipairs(onion.cprivs) do
+        -- Check to see if the player had current priv
+        if not minetest.check_player_privs(player,priv) then
+            --Player had current priv now check XP
+            return (index*400 + bonus + xRad)
+        else
+
+        end
+    end
+
+
+    --[[ This is the old way of determining radius where XP had a greater weight. 
     for index, priv in ipairs(onion.cprivs) do
         -- Check to see if the player had current priv
         if not minetest.check_player_privs(player,priv) then
@@ -63,6 +79,8 @@ onion.radius = function (pxp,player) -- Pass in player XP and objectref
 
         end
     end
+    ]]--
+
 end
 
 onion.init = function ()
@@ -91,6 +109,7 @@ function onion.permit(rad, pos)
     return false
 end
 
+--This is the fuction that is used to process the player list every few seconds
 onion.scan = function()
     -- If oragin has not been set skip everything
     if onion.oragin == nil then

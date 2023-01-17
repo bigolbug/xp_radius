@@ -1,4 +1,3 @@
 This is where I keep the changes that need to be applied
-- Add a section for moving the player back to a known valid location after a holiday
 - Prevent players from getting stuck in fall loops. 
-- Create section that checks for the christmas priv and bypasses and applies a bonus radius
+- Check to make sure any reduction in radius moves the player to the oragin. 
