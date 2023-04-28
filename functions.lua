@@ -44,7 +44,7 @@ onion.radius = function (pxp,player) -- Pass in player XP and objectref
     end
 
     -- XP Radius bonus
-    local xRad = math.floor(pxp/2000)
+    local xRad = math.floor(pxp/onion.xp_divisor)
 
     -- Radius is primarily determined based chapter progression. 
     for index, priv in ipairs(onion.cprivs) do

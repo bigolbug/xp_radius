@@ -5,6 +5,7 @@ onion.ranks = {6000,12000, 24000, 48000, 100000}
 onion.FN = minetest.get_worldpath().."/onion.txt"
 onion.cprivs = {}
 onion.CB = 200 -- This is the christmas bonus radius
+onion.xp_divisor = 1000
 
 --Get list of install privileges
 local privs = minetest.registered_privileges
