@@ -32,10 +32,11 @@ onion.bonus = function (player)
     return bonus
 end
 
-onion.radius = function (pxp,player) -- Pass in player XP and objectref
+onion.radius = function (pxp,player) -- Pass in player XP and objectref\
+
     --Bypass if player is Onion Admin
     if minetest.check_player_privs(player,"onion:admin") then
-        return 40000
+        return 40000, 40000
     end
 
     local bonus = onion.bonus(player)
@@ -48,10 +49,10 @@ onion.radius = function (pxp,player) -- Pass in player XP and objectref
 
     -- Radius is primarily determined based chapter progression. 
     for index, priv in ipairs(onion.cprivs) do
-        -- Check to see if the player had current priv
+        -- Check to see if the player has current priv
         if not minetest.check_player_privs(player,priv) then
-            --Player had current priv now check XP
-            return (index*400 + bonus + xRad)
+            --return player rad and floor
+            return (onion.rads(index) + bonus + xRad),onion.floor(index) 
         else
 
         end
@@ -96,9 +97,8 @@ onion.init = function ()
     --do nothing
 end
 
-function onion.permit(rad, pos)
+function onion.permit(rad, floor, pos)
     local ceiling = 32000
-    local floor = rad/2
     local prad = {x = math.abs(onion.oragin.x - pos.x), z = math.abs(onion.oragin.z - pos.z), y = onion.oragin.y - pos.y}
     if prad.x > rad or prad.z > rad or prad.y > floor then
         --player outside of radius
@@ -121,6 +121,7 @@ onion.scan = function()
     for index, player in ipairs(activePlayers) do
         --initialize variables
         local radius = nil
+        local floor = nil
 
         --Get the player position 
         local pos = player:get_pos()
@@ -146,7 +147,7 @@ onion.scan = function()
         end
 
         --Determine permitted radius
-        radius = onion.radius(currentXp,player)
+        radius,floor = onion.radius(currentXp,player)
         --minetest.chat_send_all("DEBUG: Radius - "..radius)
 
         if radius == nil then
@@ -155,9 +156,9 @@ onion.scan = function()
         end
 
         if radius == "reset" then
-            minetest.chat_send_player(player:get_player_name(), "XP radius reset activated, returning you to XP oragin")
+            minetest.chat_send_player(player:get_player_name(), "XP radius reset activated, returning you to XP oragin. You don-bin down graded")
             player:move_to(onion.oragin, true)
-        elseif onion.permit(radius,pos) then
+        elseif onion.permit(radius,floor,pos) then
             minetest.chat_send_player(player:get_player_name(), "You are outside your XP radius, returning you to a previous valid location")
             ppos = minetest.deserialize(pmeta:get_string("onion")) -- Previous valid location
             player:move_to(ppos, true)
