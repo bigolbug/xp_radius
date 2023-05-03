@@ -52,7 +52,7 @@ onion.radius = function (pxp,player) -- Pass in player XP and objectref\
         -- Check to see if the player has current priv
         if not minetest.check_player_privs(player,priv) then
             --return player rad and floor
-            return (onion.rads(index) + bonus + xRad),onion.floor(index) 
+            return (onion.rads[index] + bonus + xRad),onion.floor[index] 
         else
 
         end
