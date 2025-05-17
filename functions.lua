@@ -47,7 +47,7 @@ onion.radius = function (pxp,player) -- Pass in player XP and objectref\
     -- XP Radius bonus
     local xRad = math.floor(pxp/onion.xp_divisor)
 
-    -- Radius is primarily determined based chapter progression. 
+    -- Radius is primarily determined based on chapter progression. 
     for index, priv in ipairs(onion.cprivs) do
         -- Check to see if the player has current priv
         if not core.check_player_privs(player,priv) then
@@ -102,7 +102,7 @@ function onion.permit(rad, floor, pos)
     local prad = {x = math.abs(onion.oragin.x - pos.x), z = math.abs(onion.oragin.z - pos.z), y = onion.oragin.y - pos.y}
     if prad.x > rad or prad.z > rad or prad.y > floor then
         --player outside of radius
-        return true 
+        return true
     end
 
     --player is within radius
@@ -113,7 +113,7 @@ end
 onion.scan = function()
     -- If oragin has not been set skip everything
     if onion.oragin == nil then
-        core.chat_send_player("MacLean","Onion oragin has not been set or had expired. Please reset with the wand")
+        core.chat_send_player("MacLean","Onion oragin has not been set or has expired. Please reset with the wand")
         core.after(onion.interval*5,onion.scan)
         return false 
     end
@@ -124,10 +124,27 @@ onion.scan = function()
         local radius = nil
         local floor = nil
 
-        --Get the player position 
+        --Get the player position and vectors
         local pos = player:get_pos()
         local name = player:get_player_name()
-        
+        local p_vector = vector.floor(vector.new(pos))
+        --core.chat_send_all(vector.to_string(p_vector))
+        local o_vector = vector.floor(vector.new(onion.oragin))
+        --core.chat_send_all(vector.to_string(o_vector))
+        local op_vector = vector.floor(vector.subtract(o_vector,p_vector))
+        --core.chat_send_all(vector.to_string(op_vector))
+        --core.chat_send_all(vector.length(op_vector))
+        local direction = vector.direction(pos,onion.oragin)
+        --core.chat_send_all(vector.to_string(vector.direction(pos,onion.oragin)))
+        local oragin_direction = math.atan2(direction.x,-direction.z)+math.pi
+        local look_direction = player:get_look_horizontal()
+        local D_Angle = math.abs(oragin_direction - look_direction)
+        --core.chat_send_all(D_Angle)
+        if .5 < D_Angle and D_Angle < 5.8 then
+            player:set_look_horizontal(oragin_direction)
+        end
+
+
         --Get the player XP
         local currentXp = xp_redo.get_xp(name)
 
@@ -160,8 +177,16 @@ onion.scan = function()
             core.chat_send_player(player:get_player_name(), "XP radius reset activated, returning you to XP oragin. You don-bin down graded")
             player:move_to(onion.oragin, true)
         elseif onion.permit(radius,floor,pos) then
-            core.chat_send_player(player:get_player_name(), ">: ) You never escape XP radious, Moo Moo Ha")
+            core.chat_send_player(name, ">: ) You never escape da XP radius, Moo Moo Ha. Go back now")
+            --Calculate the return direction from current location. 
+            minetest.chat_send_all(vector.to_string(op_vector))
+
+            --Check look direction
+
+            --Move the player to a valid location
             ppos = core.deserialize(pmeta:get_string("onion")) -- Previous valid location
+
+
             player:move_to(ppos, true)
         else
             --Record Valid Location

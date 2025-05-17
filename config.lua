@@ -7,7 +7,7 @@ onion.floor = {200,250,300, 400, 500, 1000}
 onion.FN = minetest.get_worldpath().."/onion.txt"
 onion.cprivs = {} -- Current Chapters Mod Privs
 onion.CB = 200 -- This is the christmas bonus radius
-onion.xp_divisor = 1000
+onion.xp_divisor = 50
 
 --Get list of install privileges
 local privs = minetest.registered_privileges
