@@ -1,4 +1,4 @@
-core.register_chatcommand("ocmd",{
+core.register_chatcommand("xrcmd",{
 	params = "[action] [data]",
 	privs = "server",
 	description = "TBD",
@@ -15,7 +15,7 @@ core.register_chatcommand("ocmd",{
 			return false, "You have successfully charged rent"
 		else
 		end
-		
+
 	end,
 
 })
