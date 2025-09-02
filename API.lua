@@ -1,11 +1,3 @@
---Function to initialize the oragin as null
-xp_radius.write_file = function()
-    local f = io.open(xp_radius.FN, "w")
-    local data_string = core.serialize(xp_radius.oragin)
-    f:write(data_string)
-    io.close(f)
-end
-
 xp_radius.bonus = function (player)
     --initialize Variables
     local bonus = 0
@@ -35,9 +27,9 @@ end
 xp_radius.radius = function (pxp,player) -- Pass in player XP and objectref\
 
     --Bypass if player is xp_radius Admin
-    if core.check_player_privs(player,"xp_radius:admin") then
-        return 40000, 40000
-    end
+    --if core.check_player_privs(player,"xp_radius:admin") then
+    --    return 40000, 40000
+    --end
 
     local bonus = xp_radius.bonus(player)
     if bonus == "reset" then
@@ -45,18 +37,25 @@ xp_radius.radius = function (pxp,player) -- Pass in player XP and objectref\
     end
 
     -- XP Radius bonus
-    local xRad = math.floor(pxp/xp_radius.xp_divisor)
+    local HRad = math.floor(pxp/xp_radius.h_xp_divisor) or xp_radius.rads[1]
+    local VRad = math.floor(pxp/xp_radius.v_xp_divisor) or xp_radius.floor[1]
+    if HRad < xp_radius.rads[1] then HRad = xp_radius.rads[1] end
+    if VRad < xp_radius.floor[1] then VRad = xp_radius.floor[1] end
 
     -- Radius is primarily determined based on chapter progression. 
-    for index, priv in ipairs(xp_radius.cprivs) do
-        -- Check to see if the player has current priv
-        if not core.check_player_privs(player,priv) then
-            --return player rad and floor
-            return (xp_radius.rads[index] + bonus + xRad),(xp_radius.floor[index] + bonus)
-        else
+    if xp_radius.chapters_Enable then
+        for index, priv in ipairs(xp_radius.cprivs) do
+            -- Check to see if the player has current priv
+            if not core.check_player_privs(player,priv) then
+                --return player rad and floor
+                --return (xp_radius.rads[index] + bonus + HRad),(xp_radius.floor[index] + bonus)
+            else
 
+            end
         end
     end
+    
+    return HRad,VRad
 
 
     --[[ This is the old way of determining radius where XP had a greater weight. 
@@ -84,80 +83,63 @@ xp_radius.radius = function (pxp,player) -- Pass in player XP and objectref\
 
 end
 
-xp_radius.init = function ()
-    
-    local f = io.open(xp_radius.FN, "r")
-    if f then   -- file exists
-        local data_string = f:read("*all")
-        xp_radius.oragin = core.deserialize(data_string)
-        io.close(f)
-    end
+function xp_radius.vector(pos1, pos2)
+    -- this function returns the horizontal and vertical components of two positions. 
 
-    --if there isn't a file...
-    --do nothing
 end
 
-function xp_radius.permit(rad, floor, pos)
+
+function xp_radius.permit(rad, floor, pos1,pos2)
     local ceiling = 32000
-    local prad = {x = math.abs(xp_radius.oragin.x - pos.x), z = math.abs(xp_radius.oragin.z - pos.z), y = xp_radius.oragin.y - pos.y}
+    local prad = {x = math.abs(pos2.x - pos1.x), z = math.abs(pos2.z - pos1.z), y = pos2.y - pos1.y}
     if prad.x > rad or prad.z > rad or prad.y > floor then
         --player outside of radius
-        return true
+        return true 
     end
-
     --player is within radius
     return false
 end
 
 --This is the fuction that is used to process the player list every few seconds
 xp_radius.scan = function()
-    -- If oragin has not been set skip everything
-    if xp_radius.oragin == nil then
-        core.chat_send_player("MacLean","xp_radius oragin has not been set or has expired. Please reset with the wand")
-        core.after(xp_radius.interval*5,xp_radius.scan)
-        return false 
+    --Get Origin
+    local origin = core.deserialize(xp_radius.metadata:get_string("origin")) 
+    if not origin then
+        xp_radius.debug("origin is not know at the beginning of the xp_radius.scan() function")
+        return false
     end
 
     local activePlayers = core.get_connected_players()
     for index, player in ipairs(activePlayers) do
         --initialize variables
-        local radius = nil
-        local floor = nil
+        local radius = xp_radius.rads[1]
+        local floor = xp_radius.floor[1]
 
         --Get the player position and vectors
         local pos = player:get_pos()
         local name = player:get_player_name()
         local p_vector = vector.floor(vector.new(pos))
-        --core.chat_send_all(vector.to_string(p_vector))
-        local o_vector = vector.floor(vector.new(xp_radius.oragin))
-        --core.chat_send_all(vector.to_string(o_vector))
+        local o_vector = vector.floor(vector.new(origin))
         local op_vector = vector.floor(vector.subtract(o_vector,p_vector))
-        --core.chat_send_all(vector.to_string(op_vector))
-        --core.chat_send_all(vector.length(op_vector))
-        local direction = vector.direction(pos,xp_radius.oragin)
-        --core.chat_send_all(vector.to_string(vector.direction(pos,xp_radius.oragin)))
-        local oragin_direction = math.atan2(direction.x,-direction.z)+math.pi
+        local direction = vector.direction(pos,origin)
+        local origin_direction = math.atan2(direction.x,-direction.z)+math.pi
         local look_direction = player:get_look_horizontal()
-        local D_Angle = math.abs(oragin_direction - look_direction)
-        --core.chat_send_all(D_Angle)
-        if .5 < D_Angle and D_Angle < 5.8 then
-            player:set_look_horizontal(oragin_direction)
-        end
-
+        local D_Angle = math.abs(origin_direction - look_direction)
+       
 
         --Get the player XP
         local currentXp = xp_redo.get_xp(name)
 
-        --Determine players distance from oragin. 
-        local d = vector.distance(pos, xp_radius.oragin)
+        --Determine players distance from origin. 
+        local d = vector.distance(pos, origin)
 
         -- Get player Meta Data
         local pmeta = player:get_meta() -- player Meta
 
         --Check to see if xp_radius exists in meta
-        --If it does not then create xp_radius in meta with coordinates at the xp_radius oragin
+        --If it does not then create xp_radius in meta with coordinates at the xp_radius origin
         if pmeta:get_string("xp_radius") == "" then
-            pmeta:set_string("xp_radius",core.serialize(xp_radius.oragin))    
+            pmeta:set_string("xp_radius",core.serialize(origin))    
         end
         --initialize the christmas bonus Meta settings. Set init Value to off
         if pmeta:get_string("xp_radius-CB") == "" then
@@ -166,7 +148,8 @@ xp_radius.scan = function()
 
         --Determine permitted radius
         radius,floor = xp_radius.radius(currentXp,player)
-        --core.chat_send_all("DEBUG: Radius - "..radius)
+        core.chat_send_all("DEBUG: "..name.." had a xp_radius of "..radius)
+
 
         if radius == nil then
             core.debug("xp_radius Player Error: "..name.." radius not defined. Defaulting to 100 nodes.")
@@ -174,30 +157,33 @@ xp_radius.scan = function()
         end
 
         if radius == "reset" then
-            core.chat_send_player(player:get_player_name(), "XP radius reset activated, returning you to XP oragin. You don-bin down graded")
-            player:move_to(xp_radius.oragin, true)
-        elseif xp_radius.permit(radius,floor,pos) then
+            core.chat_send_player(player:get_player_name(), "XP radius reset activated, returning you to XP origin. You don-bin down graded")
+            player:move_to(origin, true)
+        elseif xp_radius.permit(radius,floor,pos,origin) then
             core.chat_send_player(name, ">: ) You never escape da XP radius, Moo Moo Ha. Go back now")
-            --Calculate the return direction from current location. 
-            minetest.chat_send_all(vector.to_string(op_vector))
-
-            --Check look direction
-
+            --Calculate the return direction from current location.
+            --Set look direction
+             if .5 < D_Angle and D_Angle < 5.8 then
+                player:set_look_horizontal(origin_direction)
+            end
             --Move the player to a valid location
             ppos = core.deserialize(pmeta:get_string("xp_radius")) -- Previous valid location
 
-
-            player:move_to(ppos, true)
+            --Check to see if saved location is within new radius. 
+            if xp_radius.permit(radius,floor,ppos,origin) then
+                --It is not, moving player to origin
+                player:move_to(origin, true)
+            else
+                player:move_to(ppos, true)
+            end
         else
             --Record Valid Location
             pmeta:set_string("xp_radius",core.serialize(pos))
         end
 
     end
-    
-    --For testing purposes
-    --core.chat_send_all(os.clock())
-    
-    --Run this function again after interval
-    core.after(xp_radius.interval,xp_radius.scan)
+end
+
+function xp_radius.debug(text)
+    core.log(xp_radius.debuglevel,text)
 end
