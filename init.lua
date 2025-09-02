@@ -31,7 +31,7 @@ core.register_globalstep(function(dtime)
     local time_dif = current_time - last_time
     
     if time_dif > xp_radius.interval then
-        core.chat_send_all(time_dif)
+        --core.chat_send_all(time_dif)
         if xp_radius.metadata:get_string("enabled") then
             --Mod is enabled but should we scan? - Not Used
             --local last_scan = xp_radius.metadata:get_int("last_scan")

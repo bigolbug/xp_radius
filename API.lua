@@ -148,7 +148,7 @@ xp_radius.scan = function()
 
         --Determine permitted radius
         radius,floor = xp_radius.radius(currentXp,player)
-        --core.chat_send_all("DEBUG: "..name.." had a xp_radius of "..radius)
+        --core.chat_send_all("DEBUG: "..name.." has a xp_radius of "..radius)
 
 
         if radius == nil then
