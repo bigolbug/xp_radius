@@ -27,9 +27,9 @@ end
 xp_radius.radius = function (pxp,player) -- Pass in player XP and objectref\
 
     --Bypass if player is xp_radius Admin
-    --if core.check_player_privs(player,"xp_radius:admin") then
-    --    return 40000, 40000
-    --end
+    if core.check_player_privs(player,"xp_radius:admin") then
+        return 40000, 40000
+    end
 
     local bonus = xp_radius.bonus(player)
     if bonus == "reset" then
