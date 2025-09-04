@@ -37,8 +37,8 @@ xp_radius.radius = function (pxp,player) -- Pass in player XP and objectref\
     end
 
     -- XP Radius bonus
-    local HRad = math.floor(pxp/xp_radius.h_xp_divisor) or xp_radius.rads[1]
-    local VRad = math.floor(pxp/xp_radius.v_xp_divisor) or xp_radius.floor[1]
+    local HRad = math.floor(pxp/xp_radius.h_xp_divisor)
+    local VRad = math.floor(pxp/xp_radius.v_xp_divisor)
     if HRad < xp_radius.rads[1] then HRad = xp_radius.rads[1] end
     if VRad < xp_radius.floor[1] then VRad = xp_radius.floor[1] end
 
