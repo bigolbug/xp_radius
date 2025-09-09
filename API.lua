@@ -39,8 +39,12 @@ xp_radius.radius = function (pxp,player) -- Pass in player XP and objectref\
     -- XP Radius bonus
     local HRad = math.floor(pxp/xp_radius.h_xp_divisor)
     local VRad = math.floor(pxp/xp_radius.v_xp_divisor)
-    if HRad < xp_radius.rads[1] then HRad = xp_radius.rads[1] end
-    if VRad < xp_radius.floor[1] then VRad = xp_radius.floor[1] end
+    if HRad < xp_radius.rads[1] then HRad = xp_radius.rads[1] + HRad - xp_radius.rads[1]/2 end
+    if VRad < xp_radius.floor[1] then VRad = xp_radius.floor[1] + VRad - xp_radius.floor[1]/2 end
+
+    --Cap the XP radius. 
+    if HRad > xp_radius.rads[#xp_radius.rads] then HRad = xp_radius.rads[#xp_radius.rads] end
+    if VRad > xp_radius.floor[#xp_radius.floor] then VRad = xp_radius.floor[#xp_radius.floor] end
 
     -- Radius is primarily determined based on chapter progression. 
     if xp_radius.chapters_Enable then
@@ -55,6 +59,9 @@ xp_radius.radius = function (pxp,player) -- Pass in player XP and objectref\
         end
     end
     
+
+
+
     return HRad,VRad
 
 
